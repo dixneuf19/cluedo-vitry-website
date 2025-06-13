@@ -15,7 +15,9 @@ import os
 import json
 import hashlib
 import time
+import mimetypes
 from urllib.parse import urlparse, parse_qs
+from datetime import datetime, timedelta
 
 class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Custom handler that serves the blog files and handles admin routes with form authentication."""
@@ -59,6 +61,31 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_login()
         else:
             self.send_error(405, "Method not allowed")
+    
+    def get_file_type_category(self, path):
+        """Categorize file type for caching strategy."""
+        mime_type, _ = mimetypes.guess_type(path)
+        
+        if not mime_type:
+            return 'other'
+        
+        # Images: Long cache (30 days)
+        if mime_type.startswith('image/'):
+            return 'image'
+        
+        # CSS/JS: Medium cache (7 days)
+        if mime_type in ['text/css', 'application/javascript', 'text/javascript']:
+            return 'static'
+        
+        # HTML: Short cache (1 hour)
+        if mime_type == 'text/html':
+            return 'html'
+        
+        # Fonts: Long cache (30 days)
+        if mime_type.startswith('font/') or path.endswith(('.woff', '.woff2', '.ttf', '.eot')):
+            return 'font'
+        
+        return 'other'
     
     def is_authenticated(self):
         """Check if the current request is authenticated."""
@@ -286,10 +313,72 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(html_content.encode('utf-8'))
     
     def end_headers(self):
-        """Add custom headers."""
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        self.send_header('Pragma', 'no-cache')
-        self.send_header('Expires', '0')
+        """Add intelligent caching headers based on file type."""
+        parsed_path = urlparse(self.path)
+        file_category = self.get_file_type_category(parsed_path.path)
+        
+        # Admin routes: No cache
+        if parsed_path.path.startswith('/admin'):
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        
+        # Index.html files: No cache (for easy updates)
+        elif parsed_path.path.endswith('index.html') or parsed_path.path == '/' or parsed_path.path == '/index.html':
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        
+        # Images: Long cache (30 days)
+        elif file_category == 'image':
+            max_age = 30 * 24 * 60 * 60  # 30 days in seconds
+            expires = datetime.utcnow() + timedelta(days=30)
+            self.send_header('Cache-Control', f'public, max-age={max_age}, immutable')
+            self.send_header('Expires', expires.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+            
+            # Add ETag for better caching
+            try:
+                file_path = self.translate_path(self.path)
+                if os.path.exists(file_path):
+                    stat = os.stat(file_path)
+                    etag = f'"{stat.st_mtime}-{stat.st_size}"'
+                    self.send_header('ETag', etag)
+                    self.send_header('Last-Modified', time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime(stat.st_mtime)))
+            except:
+                pass
+        
+        # CSS/JS: Medium cache (7 days)
+        elif file_category == 'static':
+            max_age = 7 * 24 * 60 * 60  # 7 days in seconds
+            expires = datetime.utcnow() + timedelta(days=7)
+            self.send_header('Cache-Control', f'public, max-age={max_age}')
+            self.send_header('Expires', expires.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+        
+        # Fonts: Long cache (30 days)
+        elif file_category == 'font':
+            max_age = 30 * 24 * 60 * 60  # 30 days in seconds
+            expires = datetime.utcnow() + timedelta(days=30)
+            self.send_header('Cache-Control', f'public, max-age={max_age}, immutable')
+            self.send_header('Expires', expires.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+        
+        # HTML pages (except index.html): Short cache (1 hour)
+        elif file_category == 'html':
+            max_age = 60 * 60  # 1 hour in seconds
+            expires = datetime.utcnow() + timedelta(hours=1)
+            self.send_header('Cache-Control', f'public, max-age={max_age}')
+            self.send_header('Expires', expires.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+        
+        # Other files: Short cache (1 hour)
+        else:
+            max_age = 60 * 60  # 1 hour in seconds
+            expires = datetime.utcnow() + timedelta(hours=1)
+            self.send_header('Cache-Control', f'public, max-age={max_age}')
+            self.send_header('Expires', expires.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+        
+        # Add compression hint for all text files
+        if file_category in ['html', 'static']:
+            self.send_header('Vary', 'Accept-Encoding')
+        
         super().end_headers()
 
 def run_server(port=8000):
@@ -304,6 +393,7 @@ def run_server(port=8000):
             print(f"🎺 Blog de Sam Marsalis - Serveur")
             print(f"🌐 Disponible sur: http://localhost:{port}")
             print(f"🔐 Admin: http://localhost:{port}/admin/")
+            print(f"🚀 Cache optimisé pour Raspberry Pi")
             
             if admin_password:
                 print(f"✅ Authentification admin: activée (formulaire)")

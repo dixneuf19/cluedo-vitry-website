@@ -13,7 +13,7 @@ Ce dossier contient les manifests Kubernetes pour déployer le blog de Sam Marsa
 
 ### 1. Modifier le domaine
 
-Editez `ingress.yaml` et remplacez `cluedo-vitry.your-domain.com` par votre domaine réel.
+Editez `ingress.yaml` et remplacez `sam-marsalis.dixneuf19.fr` par votre domaine réel.
 
 ### 2. Modifier le mot de passe admin
 
@@ -28,27 +28,13 @@ echo -n "votre-nouveau-mot-de-passe" | base64
 
 ### 3. Adapter l'image Docker
 
-Si vous utilisez un registry différent, modifiez `kustomization.yaml` :
+Si vous utilisez un tag différent, modifiez `deployment.yaml` :
 
 ```yaml
-images:
-- name: ghcr.io/votre-username/cluedo-vitry
-  newTag: latest
+image: ghcr.io/dixneuf19/cluedo-vitry-website:your-tag
 ```
 
 ## Déploiement
-
-### Méthode 1: Avec Kustomize (recommandé)
-
-```bash
-# Déployer tout d'un coup
-kubectl apply -k k8s/
-
-# Ou avec kustomize directement
-kustomize build k8s/ | kubectl apply -f -
-```
-
-### Méthode 2: Fichier par fichier
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -77,31 +63,28 @@ kubectl logs -n cluedo-vitry -l app.kubernetes.io/name=cluedo-vitry
 
 ## Accès
 
-- **Blog public** : `https://cluedo-vitry.your-domain.com`
-- **Admin panel** : `https://cluedo-vitry.your-domain.com/admin/`
+- **Blog public** : `https://sam-marsalis.dixneuf19.fr`
+- **Admin panel** : `https://sam-marsalis.dixneuf19.fr/admin/`
 
 ## Mise à jour
 
 Pour mettre à jour l'application avec une nouvelle image :
 
 ```bash
-# Modifier le tag dans kustomization.yaml puis
-kubectl apply -k k8s/
-
-# Ou directement avec kubectl
-kubectl set image deployment/cluedo-vitry blog=ghcr.io/padoa/cluedo-vitry:new-tag -n cluedo-vitry
+# Directement avec kubectl
+kubectl set image deployment/cluedo-vitry blog=ghcr.io/dixneuf19/cluedo-vitry-website:new-tag -n cluedo-vitry
 ```
 
 ## Suppression
 
 ```bash
-# Supprimer tout
-kubectl delete -k k8s/
-
-# Ou supprimer juste l'application (garder le namespace)
-kubectl delete -f k8s/deployment.yaml
-kubectl delete -f k8s/service.yaml
+# Supprimer l'application
 kubectl delete -f k8s/ingress.yaml
+kubectl delete -f k8s/service.yaml
+kubectl delete -f k8s/deployment.yaml
+kubectl delete -f k8s/secret.yaml
+kubectl delete -f k8s/configmap.yaml
+kubectl delete -f k8s/namespace.yaml
 ```
 
 ## Structure des ressources
