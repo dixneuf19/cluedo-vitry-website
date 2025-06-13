@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 Administration - Blog de Sam Marsalis</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .admin-header h1 {
+      margin: 0;
+      color: #f4d03f;
+      font-size: 1.8em;
+    }
+
+    .admin-header .user-info {
+      color: #f5f5f5;
+      font-size: 0.9em;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .logout-btn {
+      background: rgba(231, 76, 60, 0.2);
+      border: 2px solid #e74c3c;
+      color: #f5f5f5;
+      padding: 8px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #27ae60;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="admin-container">
+    <header class="admin-header">
+      <div>
+        <h1>🎺 Administration</h1>
+        <p class="user-info">
+          <span class="status-indicator"></span>
+          Connecté • Blog de Sam Marsalis
+        </p>
+      </div>
+      <div class="admin-actions">
+        <span style="color: #f5f5f5; font-size: 0.9em;">1 brouillon en attente</span>
+        <a href="/admin/logout" class="logout-btn">🚪 Déconnexion</a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <div class="draft-notice">
+        📝 <strong>Brouillon trouvé :</strong> Ce post a été sauvegardé comme brouillon et est prêt à être édité.
+      </div>
+
+      <form id="postForm">
+        <div class="form-group">
+          <label for="postTitle" class="form-label">Titre du post</label>
+          <input type="text" id="postTitle" class="form-input" value="Un drôle de concert.">
+        </div>
+
+        <div class="form-group">
+          <label for="postCategory" class="form-label">Catégorie</label>
+          <input type="text" id="postCategory" class="form-input" value="Concert">
+        </div>
+
+        <div class="form-group">
+          <label for="postExcerpt" class="form-label">Extrait</label>
+          <input type="text" id="postExcerpt" class="form-input"
+            value="Le concert de ce soir… je sais pas trop par où commencer...">
+        </div>
+
+        <div class="form-group">
+          <label for="postContent" class="form-label">Contenu du post</label>
+          <textarea id="postContent" class="form-textarea">[BROUILLON NON PUBLIÉ – 14 juin, 6h12]
+
+Le concert de ce soir… je sais pas trop par où commencer.
+
+Le public était là, vraiment. On les a embarqués. On a tout donné.
+Mais il y avait un truc dans l'air, dès les balances, dès les regards échangés.
+
+J'ai pris des risques, comme d'hab. J'ai pris le dernier solo — ouais, je l'ai piqué à Grigou.
+Je sais que ça l'a énervé. Il m'a même pas regardé à la fin du set. Je voulais pas l'humilier, je voulais juste… finir en feu.
+
+Après, Owain est revenu avec son éternel sourire de requin. Il a encore tenté son numéro avec Léa, en plein devant moi. Je crois qu'il comprend pas les limites. Je lui ai juste dit : "Tu devrais te calmer." Il a ri. Un peu trop fort.
+
+JB m'a attrapé au moment de partir. Il avait ce ton sec : "Tu t'éloignes trop de la structure. Tu sais qu'on n'est pas là pour faire du free jazz, Sam." Je lui ai dit que c'était du feeling, que c'était vivant. Je crois qu'il m'a pas entendu.
+
+Dans le van, silence. Même Le Guichon, d'habitude si bavard après deux verres, n'a pas moufté. Il fixait la fenêtre comme si on roulait vers un enterrement.
+
+On est rentrés vers 2h30.
+Charles a râlé tout le long sur les retards, les embouteillages, les frais. Je lui ai demandé de m'aider un peu pour mes dettes, il est bourré de fric ce mec et il sait que je pourrais rembourser vite avec les cachets qu'on se fait. Même fin de non recevoir, je crois que je l'ai vraiment énervé cette fois.
+
+Et Baloo ? Fidèle à lui-même. Il a bu un petit rhum et a filé direct s'occuper de son soubassophone. Un vrai moine de cuivre. Il m'a juste tapé sur l'épaule avant de remonter. C'est con, mais j'ai senti une forme de tendresse là-dedans. Comme s'il savait que j'étais pas bien.
+
+Je suis redescendu à la salle de musique. J'avais besoin de pianoter un peu. Rejouer le solo. Réfléchir.
+
+Owain est venu me voir. Allez savoir pourquoi. J'avais pas demandé, j'avais pas envie, mais il est venu.
+Je lui suis tombé dessus direct, comme un orage d'été, sans filtre. Il l'a mérité, au fond. Il pousse toujours le bouchon un peu trop loin.
+Je sais que demain, ça passera. Il est pas mauvais, Owain, juste… il comprend pas quand faut arrêter.
+Mais ce soir, non. Ce soir il pouvait attendre.
+
+J'avais besoin de souffler, de jouer un peu, de me vider la tête. J'ai peut-être abusé, j'ai réveillé JB avec deux notes trop fortes.
+Il a débarqué comme un prof qu'on sort du lit, ronchon, mais pas trop. Je me suis excusé.
+On a même pris le temps de discuter. Une vraie discussion.
+On a fait une shortlist pour la tournée. Comme quoi, même à moitié endormi, il reste carré.
+
+Puis Le Guichon est passé. Sobre, silencieux, l'œil vif.
+Pas une goutte ce soir, pas une vanne, juste un regard, à peine quelques phrases échangées. Ça m'a surpris.
+Mais c'était pas désagréable.
+Y'a pire, pour finir une nuit.
+
+Et voilà le dernier. Il arrive doucement, avec un petit geste. Peut-être une paix, un mot à dire …</textarea>
+        </div>
+
+        <div class="form-group">
+          <button type="button" class="btn" onclick="showSaveMessage()">💾 Sauvegarder le brouillon</button>
+          <button type="button" class="btn btn-secondary" onclick="showPublishMessage()">📤 Publier</button>
+          <button type="button" class="btn btn-secondary" onclick="window.location.href='../index.html'">← Retour au
+            blog</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showSaveMessage() {
+      alert('📝 Brouillon sauvegardé avec succès !\n\n(Note: Ceci est une démo pour le jeu de rôle - les modifications ne sont pas réellement sauvegardées)');
+    }
+
+    function showPublishMessage() {
+      if (confirm('🚨 Êtes-vous sûr de vouloir publier ce post ?\n\nAttention: Une fois publié, ce brouillon sera visible par tous les visiteurs du blog.')) {
+        alert('📤 Post publié avec succès !\n\n(Note: Ceci est une démo pour le jeu de rôle - le post n\'est pas réellement publié)');
+      }
+    }
+
+    // Add some visual feedback when typing
+    document.addEventListener('DOMContentLoaded', function () {
+      const inputs = document.querySelectorAll('.form-input, .form-textarea');
+      inputs.forEach(input => {
+        input.addEventListener('input', function () {
+          this.style.borderColor = '#f4d03f';
+          setTimeout(() => {
+            this.style.borderColor = '#e2e8f0';
+          }, 1000);
+        });
+      });
+    });
+
+    // Confirmation before leaving if there are unsaved changes
+    let originalContent = document.getElementById('postContent').value;
+    window.addEventListener('beforeunload', function (e) {
+      if (document.getElementById('postContent').value !== originalContent) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  </script>
+</body>
+
+</html>

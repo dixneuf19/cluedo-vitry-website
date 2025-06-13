@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cluedo-vitry
+  namespace: cluedo-vitry
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - sam-marsalis.dixneuf19.fr # Replace with your actual domain
+      secretName: sam-marsalis-dixneuf19-fr-tls
+  rules:
+    - host: sam-marsalis.dixneuf19.fr # Replace with your actual domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cluedo-vitry
+                port:
+                  number: 80
