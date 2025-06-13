@@ -16,8 +16,6 @@ import json
 import hashlib
 import time
 import mimetypes
-import hmac
-import base64
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timedelta
 
@@ -88,69 +86,10 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         return 'other'
     
     def is_authenticated(self):
-        """Check if the current request is authenticated using signed cookie."""
-        cookies = self.parse_cookies()
-        auth_token = cookies.get('admin_session')
-        
-        if not auth_token:
-            return False
-        
-        return self.verify_auth_token(auth_token)
+        """For game purposes: always require re-authentication."""
+        return False
     
-    def parse_cookies(self):
-        """Parse cookies from the request."""
-        cookies = {}
-        cookie_header = self.headers.get('Cookie')
-        if cookie_header:
-            for cookie in cookie_header.split(';'):
-                if '=' in cookie:
-                    key, value = cookie.strip().split('=', 1)
-                    cookies[key] = value
-        return cookies
-    
-    def create_auth_token(self):
-        """Create a signed authentication token (stateless)."""
-        # Get secret from environment or use default for demo
-        secret = os.environ.get('ADMIN_SECRET', 'default-secret-change-in-production')
-        
-        # Create payload: timestamp for expiration
-        timestamp = str(int(time.time()))
-        
-        # Create signature
-        message = f"admin:{timestamp}"
-        signature = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-        
-        # Combine into token
-        token = base64.b64encode(f"{message}:{signature}".encode()).decode()
-        return token
-    
-    def verify_auth_token(self, token):
-        """Verify a signed authentication token."""
-        try:
-            # Get secret from environment or use default for demo
-            secret = os.environ.get('ADMIN_SECRET', 'default-secret-change-in-production')
-            
-            # Decode token
-            decoded = base64.b64decode(token.encode()).decode()
-            message, signature = decoded.rsplit(':', 1)
-            
-            # Verify signature
-            expected_signature = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
-            if not hmac.compare_digest(signature, expected_signature):
-                return False
-            
-            # Check expiration (24 hours)
-            user, timestamp = message.split(':', 1)
-            if user != 'admin':
-                return False
-                
-            token_time = int(timestamp)
-            if time.time() - token_time > 86400:  # 24 hours
-                return False
-            
-            return True
-        except Exception:
-            return False
+
     
     def handle_login(self):
         """Handle login form submission."""
@@ -168,14 +107,8 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         submitted_password = form_data.get('password', [''])[0]
         
         if submitted_password == admin_password:
-            # Create signed auth token and set cookie
-            auth_token = self.create_auth_token()
-            
-            self.send_response(302)
-            # Redirect to admin page with the draft
-            self.send_header('Location', '/admin/')
-            self.send_header('Set-Cookie', f'admin_session={auth_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400')
-            self.end_headers()
+            # Serve the admin page directly (no redirect, no cookie)
+            self.serve_admin_file()
         else:
             # Redirect back to login with error
             self.send_response(302)
@@ -183,10 +116,9 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
     
     def handle_logout(self):
-        """Handle logout request (stateless - just clear cookie)."""
+        """Handle logout request (redirect to home)."""
         self.send_response(302)
         self.send_header('Location', '/')
-        self.send_header('Set-Cookie', 'admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT')
         self.end_headers()
     
     def redirect_to_login(self):
@@ -331,7 +263,23 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """
         self.wfile.write(html_content.encode('utf-8'))
     
-
+    def serve_admin_file(self):
+        """Serve the admin/index.html file directly."""
+        try:
+            with open('admin/index.html', 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+            self.end_headers()
+            self.wfile.write(content.encode('utf-8'))
+        except FileNotFoundError:
+            self.send_error(404, "Admin page not found")
+        except Exception as e:
+            self.send_error(500, f"Error serving admin page: {e}")
     
     def end_headers(self):
         """Add intelligent caching headers based on file type."""
@@ -417,9 +365,9 @@ def run_server(port=8000):
             print(f"🚀 Cache optimisé pour Raspberry Pi")
             
             if admin_password:
-                print(f"✅ Authentification admin: activée (stateless)")
+                print(f"✅ Authentification admin: activée (mode jeu)")
                 print(f"🔗 Connexion: http://localhost:{port}/admin/login")
-                print(f"🔐 Mode: Cookie signé (compatible multi-pods)")
+                print(f"🎮 Mode: Reconnexion requise à chaque accès")
             else:
                 print(f"⚠️  Authentification admin: DÉSACTIVÉE (définir ADMIN_PASSWORD)")
             

@@ -48,11 +48,6 @@ spec:
                 secretKeyRef:
                   name: cluedo-vitry-secrets
                   key: ADMIN_PASSWORD
-            - name: ADMIN_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: cluedo-vitry-secrets
-                  key: ADMIN_SECRET
           resources:
             requests:
               memory: "64Mi"
