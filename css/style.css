@@ -90,6 +90,22 @@ body {
   margin: 0 auto;
 }
 
+/* Post card links - Make entire card clickable */
+.post-card-link {
+  text-decoration: none !important;
+  color: inherit;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.post-card-link:hover,
+.post-card-link:visited,
+.post-card-link:active,
+.post-card-link:focus {
+  text-decoration: none !important;
+  color: inherit;
+}
+
 .post-card {
   background: white;
   border-radius: 12px;
@@ -99,9 +115,10 @@ body {
   display: flex;
   flex-direction: row;
   min-height: 250px;
+  cursor: pointer;
 }
 
-.post-card:hover {
+.post-card-link:hover .post-card {
   transform: translateY(-3px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
@@ -123,7 +140,7 @@ body {
   transition: transform 0.3s ease;
 }
 
-.post-card:hover .post-image img {
+.post-card-link:hover .post-image img {
   transform: scale(1.03);
 }
 
@@ -157,17 +174,14 @@ body {
 
 .post-title {
   margin-bottom: 1rem;
-}
-
-.post-title a {
   color: #2d3748;
-  text-decoration: none;
   font-size: 1.3rem;
   font-weight: 600;
   line-height: 1.3;
+  transition: color 0.2s ease;
 }
 
-.post-title a:hover {
+.post-card-link:hover .post-title {
   color: #667eea;
 }
 
@@ -180,7 +194,6 @@ body {
 
 .read-more {
   color: #667eea;
-  text-decoration: none;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
@@ -189,7 +202,7 @@ body {
   align-self: flex-start;
 }
 
-.read-more:hover {
+.post-card-link:hover .read-more {
   color: #5a67d8;
 }
 
@@ -242,7 +255,7 @@ body {
     padding: 1.2rem;
   }
 
-  .post-title a {
+  .post-title {
     font-size: 1.1rem;
   }
 }
