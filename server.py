@@ -16,14 +16,13 @@ import json
 import hashlib
 import time
 import mimetypes
+import hmac
+import base64
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timedelta
 
 class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """Custom handler that serves the blog files and handles admin routes with form authentication."""
-    
-    # Simple session storage (in production, use proper session management)
-    sessions = {}
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=os.getcwd(), **kwargs)
@@ -43,6 +42,7 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             elif not self.is_authenticated():
                 self.redirect_to_login()
                 return
+
             
             self.log_message("Admin panel accessed: %s", self.path)
         
@@ -88,25 +88,14 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         return 'other'
     
     def is_authenticated(self):
-        """Check if the current request is authenticated."""
-        # Get session token from cookies
+        """Check if the current request is authenticated using signed cookie."""
         cookies = self.parse_cookies()
-        session_token = cookies.get('admin_session')
+        auth_token = cookies.get('admin_session')
         
-        if not session_token:
+        if not auth_token:
             return False
         
-        # Check if session exists and is valid
-        session_data = self.sessions.get(session_token)
-        if not session_data:
-            return False
-        
-        # Check if session hasn't expired (24 hours)
-        if time.time() - session_data['created'] > 86400:
-            del self.sessions[session_token]
-            return False
-        
-        return True
+        return self.verify_auth_token(auth_token)
     
     def parse_cookies(self):
         """Parse cookies from the request."""
@@ -119,14 +108,49 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     cookies[key] = value
         return cookies
     
-    def create_session(self):
-        """Create a new session and return the token."""
-        session_token = hashlib.sha256(f"{time.time()}{os.urandom(16)}".encode()).hexdigest()
-        self.sessions[session_token] = {
-            'created': time.time(),
-            'authenticated': True
-        }
-        return session_token
+    def create_auth_token(self):
+        """Create a signed authentication token (stateless)."""
+        # Get secret from environment or use default for demo
+        secret = os.environ.get('ADMIN_SECRET', 'default-secret-change-in-production')
+        
+        # Create payload: timestamp for expiration
+        timestamp = str(int(time.time()))
+        
+        # Create signature
+        message = f"admin:{timestamp}"
+        signature = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+        
+        # Combine into token
+        token = base64.b64encode(f"{message}:{signature}".encode()).decode()
+        return token
+    
+    def verify_auth_token(self, token):
+        """Verify a signed authentication token."""
+        try:
+            # Get secret from environment or use default for demo
+            secret = os.environ.get('ADMIN_SECRET', 'default-secret-change-in-production')
+            
+            # Decode token
+            decoded = base64.b64decode(token.encode()).decode()
+            message, signature = decoded.rsplit(':', 1)
+            
+            # Verify signature
+            expected_signature = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(signature, expected_signature):
+                return False
+            
+            # Check expiration (24 hours)
+            user, timestamp = message.split(':', 1)
+            if user != 'admin':
+                return False
+                
+            token_time = int(timestamp)
+            if time.time() - token_time > 86400:  # 24 hours
+                return False
+            
+            return True
+        except Exception:
+            return False
     
     def handle_login(self):
         """Handle login form submission."""
@@ -144,12 +168,13 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         submitted_password = form_data.get('password', [''])[0]
         
         if submitted_password == admin_password:
-            # Create session and set cookie
-            session_token = self.create_session()
+            # Create signed auth token and set cookie
+            auth_token = self.create_auth_token()
             
             self.send_response(302)
+            # Redirect to admin page with the draft
             self.send_header('Location', '/admin/')
-            self.send_header('Set-Cookie', f'admin_session={session_token}; Path=/; HttpOnly; SameSite=Strict')
+            self.send_header('Set-Cookie', f'admin_session={auth_token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400')
             self.end_headers()
         else:
             # Redirect back to login with error
@@ -158,13 +183,7 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
     
     def handle_logout(self):
-        """Handle logout request."""
-        cookies = self.parse_cookies()
-        session_token = cookies.get('admin_session')
-        
-        if session_token and session_token in self.sessions:
-            del self.sessions[session_token]
-        
+        """Handle logout request (stateless - just clear cookie)."""
         self.send_response(302)
         self.send_header('Location', '/')
         self.send_header('Set-Cookie', 'admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT')
@@ -312,6 +331,8 @@ class BlogHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         """
         self.wfile.write(html_content.encode('utf-8'))
     
+
+    
     def end_headers(self):
         """Add intelligent caching headers based on file type."""
         parsed_path = urlparse(self.path)
@@ -396,8 +417,9 @@ def run_server(port=8000):
             print(f"🚀 Cache optimisé pour Raspberry Pi")
             
             if admin_password:
-                print(f"✅ Authentification admin: activée (formulaire)")
+                print(f"✅ Authentification admin: activée (stateless)")
                 print(f"🔗 Connexion: http://localhost:{port}/admin/login")
+                print(f"🔐 Mode: Cookie signé (compatible multi-pods)")
             else:
                 print(f"⚠️  Authentification admin: DÉSACTIVÉE (définir ADMIN_PASSWORD)")
             
