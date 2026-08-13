@@ -5,15 +5,14 @@ metadata:
   namespace: cluedo-vitry
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
     - hosts:
-        - sam-marsalis.dixneuf19.fr # Replace with your actual domain
+        - sam-marsalis.dixneuf19.fr
       secretName: sam-marsalis-dixneuf19-fr-tls
   rules:
-    - host: sam-marsalis.dixneuf19.fr # Replace with your actual domain
+    - host: sam-marsalis.dixneuf19.fr
       http:
         paths:
           - path: /
