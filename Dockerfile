@@ -1,5 +1,5 @@
 # Build stage
-FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim as builder
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim@sha256:a041b350d5d9483b538d5af07e9553ee8cbc7fc7fa90c2f7d20d93f18ce9bbd1 as builder
 
 # Set environment variables
 ENV UV_COMPILE_BYTECODE=1
@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # Production stage
-FROM python:3.10-slim-bookworm
+FROM python:3.10-slim-bookworm@sha256:68d914ec641a0b69267ce65184d000a2bc3a9ee2590ab702b82250ab2385735a
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
