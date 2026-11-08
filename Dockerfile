@@ -1,5 +1,5 @@
 # Build stage
-FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim as builder
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim@sha256:a041b350d5d9483b538d5af07e9553ee8cbc7fc7fa90c2f7d20d93f18ce9bbd1 as builder
 
 # Set environment variables
 ENV UV_COMPILE_BYTECODE=1
